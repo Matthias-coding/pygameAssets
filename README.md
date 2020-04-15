@@ -1,2 +1,2 @@
 # pygameAssets
-pygame add-ons (TextBox, Button)
+pygame add-ons (TextBox, Button, Textinput, checkbox)
