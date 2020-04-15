@@ -1,7 +1,6 @@
 import pygame
 from pygame.locals import *
 from math import sqrt
-scrn = None
 
 def getRect(surf, align, x, y):
     if align == 'center':
@@ -10,9 +9,6 @@ def getRect(surf, align, x, y):
         return surf.get_rect(topleft=(x,y))
     elif align == 'bottomleft':
         return surf.get_rect(bottomleft=(x,y))    
-    
-
-
 
 
 class TextBox:
@@ -25,26 +21,19 @@ class TextBox:
         self.y = y
         self.font = pygame.font.Font(fontFamily, fontSize)
         self.setText(text)
-
         self.screen = None
-
         if screen is not None:
             self.screen = screen
 
-
-
     def setText(self, text):
         self.text_surf = self.font.render(text, True, self.color)
-        self.rect = getRect(self.text_surf, self.align,self.x, self.y)
-
-    
+        self.rect = getRect(self.text_surf, self.align,self.x, self.y)   
 
     def draw(self, screen=None):
         if screen is not None:
             self.screen = screen
-        elif Button.screen is not None and self.screen is None:
+        elif TextBox.screen is not None and self.screen is None:
             self.screen = TextBox.screen
-
         self.screen.blit(self.text_surf, self.rect)
 
     def setPosition(self, x, y):
@@ -69,23 +58,16 @@ class Button:
         self.font = pygame.font.Font(fontFamily, fontSize)
         self.x = x
         self.y = y
-
         self.screen = None
-
         if screen is not None:
             self.screen = screen
-            
         self.setText(text)
         
-        
-
     def draw(self,screen=None):
         if screen is not None:
             self.screen = screen
         elif Button.screen is not None and self.screen is None:
             self.screen = Button.screen
-        
-
         self.screen.blit(self.surf, self.rect)   
         self.screen.blit(self.text_surf, self.text_rect) 
     
@@ -125,10 +107,8 @@ class InputBox:
         self.surf = pygame.Surface((w,h))
         self.surf.fill(color)
         self.rect = getRect(self.surf, align, x, y)
-
         self.active = False
         self.text = text
-
         self.color = color
         self.activeColor = activeColor
         self.textColor = textColor
@@ -136,10 +116,8 @@ class InputBox:
         self.font = pygame.font.Font(fontFamily, fontSize)
         self.x = x
         self.y = y
-
         if screen is not None:
             self.screen = screen
-
         self.setText(text)
 
     def setText(self, text):
@@ -151,9 +129,8 @@ class InputBox:
     def draw(self, screen=None):
         if screen is not None:
             self.screen = screen
-        elif Button.screen is not None and self.screen is None:
+        elif InputBox.screen is not None and self.screen is None:
             self.screen = InputBox.screen
-
         self.screen.blit(self.surf, self.rect)   
         self.screen.blit(self.text_surf, self.text_rect) 
 
@@ -161,7 +138,6 @@ class InputBox:
         if self.rect.collidepoint(pygame.mouse.get_pos()):
             if event.type == MOUSEBUTTONDOWN and event.button == 1:
                 self.active = not self.active
-
             if event.type == KEYDOWN:
                 if self.active:
                     if event.key == K_RETURN:
@@ -170,7 +146,6 @@ class InputBox:
                         self.text = self.text[:-1]
                     else:
                         self.text += event.unicode
-
                     self.setText(self.text)
 
     @staticmethod
@@ -185,10 +160,8 @@ class CheckBox:
         self.surf = pygame.Surface((d,d))
         self.surf.fill(color)
         self.rect = getRect(self.surf, align, x, y)
-
         self.checked = False
         self.text = text
-
         self.color = color
         self.activeColor = activeColor
         self.textColor = textColor
@@ -196,31 +169,25 @@ class CheckBox:
         self.font = pygame.font.Font(fontFamily, fontSize)
         self.x = x
         self.y = y
-
         if screen is not None:
             self.screen = screen
-
         l =  int(sqrt(2*(d*d)))-4
         x,y = self.rect.topleft
         self.xSurf1 = pygame.Surface((l,5), pygame.SRCALPHA)
         self.xSurf1.fill((0,0,0))
         self.xSurf1 = pygame.transform.rotate(self.xSurf1, -45)
         self.xRect1 = getRect(self.xSurf1, 'topleft', x, y)
-        
         x,y = self.rect.bottomleft
         self.xSurf2 = pygame.Surface((l,5), pygame.SRCALPHA)
         self.xSurf2.fill((0,0,0))
         self.xSurf2 = pygame.transform.rotate(self.xSurf2, 45)
         self.xRect2 = getRect(self.xSurf2, 'bottomleft', x, y)
 
-
-
     def draw(self, screen=None):
         if screen is not None:
             self.screen = screen
         elif CheckBox.screen is not None and self.screen is None:
             self.screen = InputBox.screen
-
         self.screen.blit(self.surf, self.rect)
         if self.checked:
             self.screen.blit(self.xSurf1, self.xRect1)
