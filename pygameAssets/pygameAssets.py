@@ -11,6 +11,7 @@ def getRect(surf, align, x, y):
         return surf.get_rect(bottomleft=(x,y))    
 
 
+
 class TextBox:
     screen = None
     def __init__(self, x, y, text = '', color = (0,0,0), fontSize = 60, fontFamily = None, align ='center', screen=None):
@@ -202,3 +203,74 @@ class CheckBox:
     @staticmethod
     def setScreen(screen):
         CheckBox.screen = screen
+
+
+class Slider:
+    screen = None
+    force_integer = False
+    def __init__(self,x, y, w, color = (200,200,200), activeColor = (200,200,200), pointColor=(0,0,0), max_=100,min_=0,value=0,  align='center', forceInt=None, screen=None):
+        super().__init__()
+        self.surf = pygame.Surface((w,10))
+        self.surf.fill(color)
+        self.rect = getRect(self.surf, align, x, y)
+        self.leftx = self.rect.left
+        self.rightx = self.rect.right
+        self.range = w
+        self.dragSurf = pygame.Surface((15,15))
+        self.dragSurf.fill(pointColor)
+        #self.dragRect = pygame.draw.circle(Slider.screen, pointColor, (leftx, int((self.rect.top-self.rect.bottom) /2)),7)
+        self.dragRect = getRect(self.dragSurf, 'center', self.leftx, self.rect.bottom-int((self.rect.bottom-self.rect.top)/2))
+        self.color = color
+        self.activeColor = activeColor
+        self.align = align
+        self.x = x
+        self.y = y
+        self.max = max_
+        self.min = min_
+        self.value = value
+        self.active = False
+        self.force_int = forceInt
+        if screen is not None:
+            self.screen = screen
+
+    def handle_event(self,event):
+        if self.rect.collidepoint(pygame.mouse.get_pos()):
+            if event.type == MOUSEBUTTONDOWN and event.button == 1 and not self.active:
+                self.active = True
+            self.surf.fill(self.activeColor)
+        else:
+            self.surf.fill(self.color)
+        if event.type == MOUSEBUTTONUP and event.button == 1 and self.active:
+                self.active = False
+
+        if self.active and (event.type == MOUSEBUTTONDOWN or event.type == MOUSEMOTION):
+            pos = pygame.mouse.get_pos()
+            if pos[0] > self.leftx and pos[0] < self.rightx:
+                self.dragRect = getRect(self.dragSurf, 'center', pos[0], self.dragRect.center[1]) 
+            else:
+                if pos[0] <= self.leftx:
+                    self.dragRect = getRect(self.dragSurf, 'center', self.leftx, self.dragRect.center[1]) 
+                if pos[0] >= self.rightx:
+                    self.dragRect = getRect(self.dragSurf, 'center', self.rightx, self.dragRect.center[1])
+        
+        self.value = (((self.dragRect.center[0] - self.leftx)/self.range) * (self.max-self.min))+self.min
+        
+        if self.force_int is None and Slider.forceInt:
+            self.value = int(self.value)
+        
+    def draw(self, screen=None):
+        if screen is not None:
+            self.screen = screen
+        elif CheckBox.screen is not None and self.screen is None:
+            self.screen = InputBox.screen
+
+        self.screen.blit(self.surf, self.rect)
+        self.screen.blit(self.dragSurf, self.dragRect)
+
+
+    @staticmethod
+    def setScreen(screen):
+        Slider.screen = screen
+    @staticmethod
+    def forceInt(forceint):
+        Slider.force_integer =forceint
