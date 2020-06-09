@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 from math import sqrt
+import time
 
 def getRect(surf, align, x, y):
     if align == 'center':
@@ -9,7 +10,6 @@ def getRect(surf, align, x, y):
         return surf.get_rect(topleft=(x,y))
     elif align == 'bottomleft':
         return surf.get_rect(bottomleft=(x,y))    
-
 
 
 class TextBox:
@@ -117,6 +117,13 @@ class InputBox:
         self.font = pygame.font.Font(fontFamily, fontSize)
         self.x = x
         self.y = y
+        self.blink = False
+        self.startTime = time.time()
+        self.endTime = 0
+
+        self.blinkSurf = pygame.Surface((5, (h/2)+(h/3)))
+        self.blinkSurf.fill((0,0,0))
+
         if screen is not None:
             self.screen = screen
         self.setText(text)
@@ -126,14 +133,26 @@ class InputBox:
         self.text_surf = self.font.render(self.text, True, self.textColor)
         self.text_rect = getRect(self.text_surf, self.align, self.x, self.y)
         self.rect.center = self.text_rect.center
+        self.blinkRect = getRect(self.blinkSurf, 'center', self.rect.right+5,self.y)
 
     def draw(self, screen=None):
+        self.endTime = time.time()
+        if int(round(self.endTime-self.startTime)) == 1:
+            self.blink = True
+        elif int(round(self.endTime-self.startTime))==0:
+            self.blink = False
+        else:
+            self.startTime = time.time()
+        #print(self.blink, int(round(self.endTime-self.startTime)), self.endTime-self.startTime)
+
         if screen is not None:
             self.screen = screen
         elif InputBox.screen is not None and self.screen is None:
             self.screen = InputBox.screen
         self.screen.blit(self.surf, self.rect)   
         self.screen.blit(self.text_surf, self.text_rect) 
+        if self.blink:
+            self.screen.blit(self.blinkSurf, self.blinkRect)
 
     def handle_event(self,event):
         if self.rect.collidepoint(pygame.mouse.get_pos()):
@@ -208,7 +227,7 @@ class CheckBox:
 class Slider:
     screen = None
     force_integer = False
-    def __init__(self,x, y, w, color = (200,200,200), activeColor = (200,200,200), pointColor=(0,0,0), max_=100,min_=0,value=0,  align='center', forceInt=None, screen=None):
+    def __init__(self,x, y, w, color = (200,200,200), activeColor = (200,200,200), pointColor=(0,0,0), max_=100, min_=0, value=None, align='center', forceInt=None, screen=None):
         super().__init__()
         self.surf = pygame.Surface((w,10))
         self.surf.fill(color)
@@ -216,7 +235,7 @@ class Slider:
         self.leftx = self.rect.left
         self.rightx = self.rect.right
         self.range = w
-        self.dragSurf = pygame.Surface((15,15))
+        self.dragSurf = pygame.Surface((10,20))
         self.dragSurf.fill(pointColor)
         #self.dragRect = pygame.draw.circle(Slider.screen, pointColor, (leftx, int((self.rect.top-self.rect.bottom) /2)),7)
         self.dragRect = getRect(self.dragSurf, 'center', self.leftx, self.rect.bottom-int((self.rect.bottom-self.rect.top)/2))
@@ -227,14 +246,25 @@ class Slider:
         self.y = y
         self.max = max_
         self.min = min_
-        self.value = value
+        print(value)
+        if value is None:
+            self.value = self.min
+        else:
+            self.value = value
+
         self.active = False
         self.force_int = forceInt
+
+        self.setValue(self.value)
         if screen is not None:
             self.screen = screen
 
+    def setValue(self,val):
+        self.dragRect.center = (((((self.value-self.min)/(self.max-self.min))*self.range)+self.leftx), self.dragRect.center[1])
+        self.value = val
+
     def handle_event(self,event):
-        if self.rect.collidepoint(pygame.mouse.get_pos()):
+        if self.rect.collidepoint(pygame.mouse.get_pos()) or self.dragRect.collidepoint(pygame.mouse.get_pos()):
             if event.type == MOUSEBUTTONDOWN and event.button == 1 and not self.active:
                 self.active = True
             self.surf.fill(self.activeColor)
@@ -254,9 +284,10 @@ class Slider:
                     self.dragRect = getRect(self.dragSurf, 'center', self.rightx, self.dragRect.center[1])
         
         self.value = (((self.dragRect.center[0] - self.leftx)/self.range) * (self.max-self.min))+self.min
-        
-        if self.force_int is None and Slider.forceInt:
-            self.value = int(self.value)
+
+        if (self.force_int is None and Slider.force_integer) or self.force_int is True:
+            self.value = int(round(self.value))
+        return self.value
         
     def draw(self, screen=None):
         if screen is not None:
